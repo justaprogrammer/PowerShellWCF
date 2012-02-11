@@ -36,7 +36,7 @@ Add-Type -AssemblyName "System.Runtime.Serialization"
 	Get-WsdlImporter 'http://localhost.fiddler:14232/EchoService.svc?wsdl' -HttpGet 
 
 #>
-function global:Get-WsdlImporter([Parameter(Mandatory=$true, ValueFromPipeline=$true)][string]$wsdlUrl, [switch]$httpGet)
+function global:Get-WsdlImporter([CmdletBinding()][Parameter(Mandatory=$true, ValueFromPipeline=$true)][string]$wsdlUrl, [switch]$httpGet)
 {
 	if($httpGet -eq $true)
 	{
@@ -68,6 +68,7 @@ function global:Get-WsdlImporter([Parameter(Mandatory=$true, ValueFromPipeline=$
 	$proxy = New-Object $proxyType($endpoints[0].Binding, $endpoints[0].Address);
 #>
 function global:Get-WcfProxyType(
+	[CmdletBinding()]
 	[Parameter(ParameterSetName='WsdlImporter', Position=0, Mandatory=$true, ValueFromPipeline=$true)][ServiceModel.Description.WsdlImporter] $wsdlImporter,
 	[Parameter(ParameterSetName='WsdlUrl', Position=0, Mandatory=$true, ValueFromPipeline=$true)][string] $wsdlUrl, 
 	[string] $proxyPath
@@ -128,8 +129,10 @@ function global:Get-WcfProxyType(
 	$proxy.Echo("Justin Dearing");
 #>
 function global:Get-WcfProxy(
+	[CmdletBinding()]
 	[Parameter(ParameterSetName='WsdlImporter', Position=0, Mandatory=$true, ValueFromPipeline=$true)][ServiceModel.Description.WsdlImporter] $wsdlImporter,
 	[Parameter(ParameterSetName='WsdlUrl', Position=0, Mandatory=$true, ValueFromPipeline=$true)][string] $wsdlUrl, 
+	[string]
 	[string] $proxyPath
 ) {
 	switch ($PsCmdlet.ParameterSetName)
