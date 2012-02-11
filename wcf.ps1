@@ -54,7 +54,7 @@ function global:Get-WcfProxy(
 			}
 			break
 		}
-		"WsdlUrl"  { break }
+		"WsdlImporter"  { break }
 	}
 	
 	$generator = new-object System.ServiceModel.Description.ServiceContractGenerator
