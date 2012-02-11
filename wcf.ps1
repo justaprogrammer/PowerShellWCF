@@ -2,7 +2,7 @@
 .SYNOPSIS  
 	Functions to call WCF Services With PowerShell.
 .NOTES
-	Version 1.1 10.02.2012
+	Version 1.2 11.02.2012
 	Requires Powershell v2 and .NET 3.5
 
 	Original version by Christian Glessner
@@ -15,6 +15,7 @@
 	Twitter: http://twitter.com/zippy1981 
 .LINK  
 	Blog describing original version: http://www.ilovesharepoint.com/2008/12/call-wcf-services-with-powershell.html
+	Authoritative version of this fork: https://github.com/justaprogrammer/PowerShellWCF
 	Posted to PoshCode.org http://poshcode.org/?lang=&q=PS2WCF
 #>
 
