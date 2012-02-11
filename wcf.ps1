@@ -114,16 +114,7 @@ function global:Get-WcfProxyType(
 		throw "Proxy generation failed"       
 	}
 	
-	foreach($type in $result.CompiledAssembly.GetTypes())
-	{
-		if($type.BaseType.IsGenericType)
-		{
-			if($type.BaseType.GetGenericTypeDefinition().FullName -eq "System.ServiceModel.ClientBase``1" )
-			{
-				return $type
-			}
-		}
-	}
+	return $result.CompiledAssembly.GetTypes() | Where-Object {$_.BaseType.IsGenericType -and $_.BaseType.GetGenericTypeDefinition().FullName -eq "System.ServiceModel.ClientBase``1" }
 }
 
 <#  
