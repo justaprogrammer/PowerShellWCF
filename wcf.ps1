@@ -128,6 +128,9 @@ function global:Get-WcfProxyType(
 .EXAMPLE
     $proxy = Get-WcfProxy 'http://localhost.fiddler:14232/EchoService.svc/mex'
 	$proxy.Echo("Justin Dearing");
+.EXAMPLE
+	$proxy = Get-WcfProxy 'net.tcp://localhost:8732/EchoService/mex' 'net.tcp://localhost:8732/EchoService/' (New-Object System.ServiceModel.NetTcpBinding)
+	$proxy.Echo("Justin Dearing");
 #>
 function global:Get-WcfProxy(
 	[CmdletBinding()]
