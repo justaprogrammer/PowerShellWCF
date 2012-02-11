@@ -1,23 +1,41 @@
-# Call WCF Services With PowerShell V1.1 10.02.2012
-# described on http://www.ilovesharepoint.com/2008/12/call-wcf-services-with-powershell.html
-# requires Powershell v2 
-#
-# original version by Christian Glessner
-# Blog: http://www.iLoveSharePoint.com
-# Twitter: http://twitter.com/cglessner
-# Codeplex: http://codeplex.com/iLoveSharePoint
-#
-# PowerShell v2.0 modification by Justin Dearing
-# Blog: http://justaprogrammer.net
-# Twitter: http://twitter.com/zippy1981 
-#
-# requires .NET 3.5
+<#  
+.SYNOPSIS  
+	Functions to call WCF Services With PowerShell.
+.NOTES
+	Version 1.1 10.02.2012
+	Requires Powershell v2 and .NET 3.5
+
+	Original version by Christian Glessner
+	Blog: http://www.iLoveSharePoint.com
+	Twitter: http://twitter.com/cglessner
+	Codeplex: http://codeplex.com/iLoveSharePoint
+	
+	PowerShell v2.0 modification by Justin Dearing
+	Blog: http://justaprogrammer.net
+	Twitter: http://twitter.com/zippy1981 
+.LINK  
+	Blog describing original version: http://www.ilovesharepoint.com/2008/12/call-wcf-services-with-powershell.html
+	Posted to PoshCode.org http://poshcode.org/?lang=&q=PS2WCF
+#>
 
 # load WCF assemblies
 Add-Type -AssemblyName "System.ServiceModel"
 Add-Type -AssemblyName "System.Runtime.Serialization"
 
-# get metadata of a service
+<#  
+.SYNOPSIS  
+	Get metadata of a service
+
+.DESCRIPTION  
+	Parses a wsdl or mex and generates a WsdlImporter object from it.
+.EXAMPLE
+	Get-WsdlImporter 'http://localhost.fiddler:14232/EchoService.svc/mex'
+.EXAMPLE
+	Get-WsdlImporter 'http://localhost.fiddler:14232/EchoService.svc' -HttpGet
+.EXAMPLE
+	Get-WsdlImporter 'http://localhost.fiddler:14232/EchoService.svc?wsdl' -HttpGet 
+
+#>
 function global:Get-WsdlImporter([Parameter(Mandatory=$true, ValueFromPipeline=$true)][string]$wsdlUrl, [switch]$httpGet)
 {
 	if($httpGet -eq $true)
@@ -37,7 +55,18 @@ function global:Get-WsdlImporter([Parameter(Mandatory=$true, ValueFromPipeline=$
 	return $wsdlImporter	
 }
 
-# Generate wcf proxy types
+<#  
+.SYNOPSIS  
+    Generate wcf proxy types
+
+.DESCRIPTION  
+    Examines a web services meta data (wsdl or mex) and generates the types for the client proxy, 
+	as well as request and response contracts.
+.EXAMPLE  
+    $proxyType = Get-WcfProxyType $wsdlImporter
+	$endpoints = $wsdlImporter.ImportAllEndpoints();
+	$proxy = New-Object $proxyType($endpoints[0].Binding, $endpoints[0].Address);
+#>
 function global:Get-WcfProxyType(
 	[Parameter(ParameterSetName='WsdlImporter', Position=0, Mandatory=$true, ValueFromPipeline=$true)][ServiceModel.Description.WsdlImporter] $wsdlImporter,
 	[Parameter(ParameterSetName='WsdlUrl', Position=0, Mandatory=$true, ValueFromPipeline=$true)][string] $wsdlUrl, 
@@ -97,7 +126,16 @@ function global:Get-WcfProxyType(
 	}
 }
 
-# Generate wcf proxy
+<#  
+.SYNOPSIS  
+    Generate wcf proxy
+
+.DESCRIPTION  
+    Generate wcf proxy in a manner similar to a Get-WebServiceProxy
+.EXAMPLE
+    $proxy = Get-WcfProxy 'http://localhost.fiddler:14232/EchoService.svc/mex'
+	$proxy.Echo("Justin Dearing");
+#>
 function global:Get-WcfProxy(
 	[Parameter(ParameterSetName='WsdlImporter', Position=0, Mandatory=$true, ValueFromPipeline=$true)][ServiceModel.Description.WsdlImporter] $wsdlImporter,
 	[Parameter(ParameterSetName='WsdlUrl', Position=0, Mandatory=$true, ValueFromPipeline=$true)][string] $wsdlUrl, 
