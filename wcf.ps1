@@ -1,19 +1,24 @@
-# Call WCF Services With PowerShell V1.0 22.12.2008
+# Call WCF Services With PowerShell V1.1 10.02.2012
 # described on http://www.ilovesharepoint.com/2008/12/call-wcf-services-with-powershell.html
-# 
-# by Christian Glessner
+# requires Powershell v2 
+#
+# original version by Christian Glessner
 # Blog: http://www.iLoveSharePoint.com
 # Twitter: http://twitter.com/cglessner
 # Codeplex: http://codeplex.com/iLoveSharePoint
 #
+# PowerShell v2.0 modification by Justin Dearing
+# Blog: http://justaprogrammer.net
+# Twitter: http://twitter.com/zippy1981 
+#
 # requires .NET 3.5
 
 # load WCF assemblies
-[void][System.Reflection.Assembly]::LoadWithPartialName("System.ServiceModel")
-[void][System.Reflection.Assembly]::LoadWithPartialName("System.Runtime.Serialization")
+Add-Type -AssemblyName "System.ServiceModel"
+Add-Type -AssemblyName "System.Runtime.Serialization"
 
 # get metadata of a service
-function global:Get-WsdlImporter($wsdlUrl=$(throw "parameter -wsdlUrl is missing"), $httpGet)
+function global:Get-WsdlImporter([Parameter(Mandatory=$true, ValueFromPipeline=$true)][string]$wsdlUrl, [switch]$httpGet)
 {
 	if($httpGet -eq $true)
 	{
@@ -33,23 +38,23 @@ function global:Get-WsdlImporter($wsdlUrl=$(throw "parameter -wsdlUrl is missing
 }
 
 # Generate wcf proxy types
-function global:Get-WcfProxy($wsdlImporter=$null, $wsdlUrl, $proxyPath)
-{
-	if($wsdlImporter -eq $null -and $wsdlUrl -eq $null)
+function global:Get-WcfProxy(
+	[Parameter(ParameterSetName='WsdlImporter', Position=0, Mandatory=$true, ValueFromPipeline=$true)][ServiceModel.Description.WsdlImporter] $wsdlImporter,
+	[Parameter(ParameterSetName='WsdlUrl', Position=0, Mandatory=$true, ValueFromPipeline=$true)][string] $wsdlUrl, 
+	[string] $proxyPath
+) {
+	switch ($PsCmdlet.ParameterSetName)
 	{
-		throw "parameter -wsdlImporter or -wsdlUrl must be specified"
-	}
-	else
-	{
-		if($wsdlImporter -eq $null)
-		{
+		"WsdlUrl"  {
 			$wsdlImporter = Get-WsdlImporter -wsdlUrl $wsdlUrl
 			trap [Exception]
 			{
 				$script:wsdlImporter = Get-WsdlImporter -wsdlUrl $wsdlUrl -httpGet $true
 				continue
 			}
+			break
 		}
+		"WsdlUrl"  { break }
 	}
 	
 	$generator = new-object System.ServiceModel.Description.ServiceContractGenerator
@@ -69,7 +74,7 @@ function global:Get-WcfProxy($wsdlImporter=$null, $wsdlUrl, $proxyPath)
 		$parameters.OutputAssembly = $proxyPath
 	}
 	
-	$providerOptions = new-object "System.Collections.Generic.Dictionary``2[System.String,System.String]"
+	$providerOptions = New-Object "Collections.Generic.Dictionary[String,String]"
 	[void]$providerOptions.Add("CompilerVersion","v3.5")
 	
 	$compiler = New-Object Microsoft.CSharp.CSharpCodeProvider($providerOptions)
