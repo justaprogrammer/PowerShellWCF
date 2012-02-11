@@ -38,14 +38,14 @@ function global:Get-WsdlImporter([Parameter(Mandatory=$true, ValueFromPipeline=$
 }
 
 # Generate wcf proxy types
-function global:Get-WcfProxy(
+function global:Get-WcfProxyType(
 	[Parameter(ParameterSetName='WsdlImporter', Position=0, Mandatory=$true, ValueFromPipeline=$true)][ServiceModel.Description.WsdlImporter] $wsdlImporter,
 	[Parameter(ParameterSetName='WsdlUrl', Position=0, Mandatory=$true, ValueFromPipeline=$true)][string] $wsdlUrl, 
 	[string] $proxyPath
 ) {
 	switch ($PsCmdlet.ParameterSetName)
 	{
-		"WsdlUrl"  {
+		"WsdlUrl" {
 			$wsdlImporter = Get-WsdlImporter -wsdlUrl $wsdlUrl
 			trap [Exception]
 			{
@@ -54,7 +54,7 @@ function global:Get-WcfProxy(
 			}
 			break
 		}
-		"WsdlImporter"  { break }
+		"WsdlImporter" { break }
 	}
 	
 	$generator = new-object System.ServiceModel.Description.ServiceContractGenerator
@@ -91,9 +91,32 @@ function global:Get-WcfProxy(
 		{
 			if($type.BaseType.GetGenericTypeDefinition().FullName -eq "System.ServiceModel.ClientBase``1" )
 			{
-				$type
+				return $type
 			}
 		}
 	}
 }
 
+# Generate wcf proxy
+function global:Get-WcfProxy(
+	[Parameter(ParameterSetName='WsdlImporter', Position=0, Mandatory=$true, ValueFromPipeline=$true)][ServiceModel.Description.WsdlImporter] $wsdlImporter,
+	[Parameter(ParameterSetName='WsdlUrl', Position=0, Mandatory=$true, ValueFromPipeline=$true)][string] $wsdlUrl, 
+	[string] $proxyPath
+) {
+	switch ($PsCmdlet.ParameterSetName)
+	{
+		"WsdlUrl" {
+			$wsdlImporter = Get-WsdlImporter -wsdlUrl $wsdlUrl
+			trap [Exception]
+			{
+				$script:wsdlImporter = Get-WsdlImporter -wsdlUrl $wsdlUrl -httpGet $true
+				continue
+			}
+			break
+		}
+	}
+  $proxyType = Get-WcfProxyType $wsdlImporter
+
+  $endpoints = $wsdlImporter.ImportAllEndpoints();
+  return New-Object $proxyType($endpoints[0].Binding, $endpoints[0].Address);
+}
