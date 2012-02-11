@@ -130,11 +130,15 @@ function global:Get-WcfProxyType(
 #>
 function global:Get-WcfProxy(
 	[CmdletBinding()]
-	[Parameter(ParameterSetName='WsdlImporter', Position=0, Mandatory=$true, ValueFromPipeline=$true)][ServiceModel.Description.WsdlImporter] $wsdlImporter,
-	[Parameter(ParameterSetName='WsdlUrl', Position=0, Mandatory=$true, ValueFromPipeline=$true)][string] $wsdlUrl, 
-	[string]
-	[string] $proxyPath
+	[Parameter(ParameterSetName='WsdlImporter', Position=0, Mandatory=$true, ValueFromPipeline=$true)][ServiceModel.Description.WsdlImporter] $WsdlImporter,
+	[Parameter(ParameterSetName='WsdlUrl', Position=0, Mandatory=$true, ValueFromPipeline=$true)][string] $WsdlUrl,
+	[Parameter(Position=1, Mandatory=$false)][string] $EndpointAddress = $null,
+	[Parameter(Position=2, Mandatory=$false)][System.ServiceModel.Channels.Binding] $Binding = $null
 ) {
+	if ($Binding -ne $null -and [string]::IsNullOrEmpty($EndpointAddress)) {
+		throw New-Object ArgumentNullException '$EndPointAddress', 'You cannot set $Binding without setting $EndpointAddress.'
+	}
+	
 	switch ($PsCmdlet.ParameterSetName)
 	{
 		"WsdlUrl" {
@@ -147,8 +151,14 @@ function global:Get-WcfProxy(
 			break
 		}
 	}
-  $proxyType = Get-WcfProxyType $wsdlImporter
-
-  $endpoints = $wsdlImporter.ImportAllEndpoints();
-  return New-Object $proxyType($endpoints[0].Binding, $endpoints[0].Address);
+	
+	$proxyType = Get-WcfProxyType $wsdlImporter;
+	
+	if ([string]::IsNullOrEmpty($EndpointAddress)) {
+		$endpoints = $wsdlImporter.ImportAllEndpoints();
+		$Binding = $endpoints[0].Binding;
+		$EndpointAddress = $endpoints[0].Address;
+	}
+	
+	return New-Object $proxyType($Binding, $EndpointAddress);
 }

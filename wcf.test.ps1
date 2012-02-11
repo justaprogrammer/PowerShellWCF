@@ -18,7 +18,7 @@ $wsdlImporter = Get-WsdlImporter "http://$($hostname):14232/EchoService.svc/mex"
 # $endpoints = $wsdlImporter.ImportAllEndpoints();
 # $proxy = New-Object $proxyType($endpoints[0].Binding, $endpoints[0].Address);
 #$proxy = Get-WcfProxy "http://$($hostname):14232/EchoService.svc/mex"
-$proxy = Get-WcfProxy $wsdlImporter
+$proxy = Get-WcfProxy $wsdlImporter # "http://$($hostname):14232/EchoService.svc/WCF" (New-Object System.ServiceModel.WSHttpBinding)
 $proxy.Echo("Justin Dearing");
 
 #Get-Help Get-WsdlImporter
