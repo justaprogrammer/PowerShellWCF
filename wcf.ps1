@@ -36,9 +36,9 @@ Add-Type -AssemblyName "System.Runtime.Serialization"
 	Get-WsdlImporter 'http://localhost.fiddler:14232/EchoService.svc?wsdl' -HttpGet 
 
 #>
-function global:Get-WsdlImporter([CmdletBinding()][Parameter(Mandatory=$true, ValueFromPipeline=$true)][string]$wsdlUrl, [switch]$httpGet)
+function global:Get-WsdlImporter([CmdletBinding()][Parameter(Mandatory=$true, ValueFromPipeline=$true)][string]$WsdlUrl, [switch]$HttpGet)
 {
-	if($httpGet -eq $true)
+	if($HttpGet)
 	{
 		$local:mode = [System.ServiceModel.Description.MetadataExchangeClientMode]::HttpGet
 	}
@@ -47,7 +47,7 @@ function global:Get-WsdlImporter([CmdletBinding()][Parameter(Mandatory=$true, Va
 		$local:mode = [System.ServiceModel.Description.MetadataExchangeClientMode]::MetadataExchange
 	}
 	
-	$mexClient = New-Object System.ServiceModel.Description.MetadataExchangeClient((New-Object System.Uri($wsdlUrl)),$mode)
+	$mexClient = New-Object System.ServiceModel.Description.MetadataExchangeClient([Uri]$WsdlUrl, $mode);
 	$mexClient.MaximumResolvedReferences = [System.Int32]::MaxValue
 	$metadataSet = $mexClient.GetMetadata()
 	$wsdlImporter = New-Object System.ServiceModel.Description.WsdlImporter($metadataSet)
@@ -69,17 +69,17 @@ function global:Get-WsdlImporter([CmdletBinding()][Parameter(Mandatory=$true, Va
 #>
 function global:Get-WcfProxyType(
 	[CmdletBinding()]
-	[Parameter(ParameterSetName='WsdlImporter', Position=0, Mandatory=$true, ValueFromPipeline=$true)][ServiceModel.Description.WsdlImporter] $wsdlImporter,
-	[Parameter(ParameterSetName='WsdlUrl', Position=0, Mandatory=$true, ValueFromPipeline=$true)][string] $wsdlUrl, 
+	[Parameter(ParameterSetName='WsdlImporter', Position=0, Mandatory=$true, ValueFromPipeline=$true)][ServiceModel.Description.WsdlImporter] $WsdlImporter,
+	[Parameter(ParameterSetName='WsdlUrl', Position=0, Mandatory=$true, ValueFromPipeline=$true)][string] $WsdlUrl, 
 	[string] $proxyPath
 ) {
 	switch ($PsCmdlet.ParameterSetName)
 	{
 		"WsdlUrl" {
-			$wsdlImporter = Get-WsdlImporter -wsdlUrl $wsdlUrl
+			$WsdlImporter = Get-WsdlImporter $WsdlUrl
 			trap [Exception]
 			{
-				$script:wsdlImporter = Get-WsdlImporter -wsdlUrl $wsdlUrl -httpGet $true
+				$WsdlImporter = Get-WsdlImporter $WsdlUrl -HttpGet
 				continue
 			}
 			break
@@ -142,10 +142,10 @@ function global:Get-WcfProxy(
 	switch ($PsCmdlet.ParameterSetName)
 	{
 		"WsdlUrl" {
-			$wsdlImporter = Get-WsdlImporter -wsdlUrl $wsdlUrl
+			$WsdlImporter = Get-WsdlImporter $WsdlUrl
 			trap [Exception]
 			{
-				$script:wsdlImporter = Get-WsdlImporter -wsdlUrl $wsdlUrl -httpGet $true
+				$WsdlImporter = Get-WsdlImporter $WsdlUrl -HttpGet
 				continue
 			}
 			break
@@ -155,7 +155,7 @@ function global:Get-WcfProxy(
 	$proxyType = Get-WcfProxyType $wsdlImporter;
 	
 	if ([string]::IsNullOrEmpty($EndpointAddress)) {
-		$endpoints = $wsdlImporter.ImportAllEndpoints();
+		$endpoints = $WsdlImporter.ImportAllEndpoints();
 		$Binding = $endpoints[0].Binding;
 		$EndpointAddress = $endpoints[0].Address;
 	}
