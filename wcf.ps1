@@ -158,7 +158,8 @@ function global:Get-WcfProxy(
 	[Parameter(ParameterSetName='WsdlImporter', Position=0, Mandatory=$true, ValueFromPipeline=$true)][ServiceModel.Description.WsdlImporter] $WsdlImporter,
 	[Parameter(ParameterSetName='WsdlUrl', Position=0, Mandatory=$true, ValueFromPipeline=$true)][string] $WsdlUrl,
 	[Parameter(Position=1, Mandatory=$false)][string] $EndpointAddress = $null,
-	[Parameter(Position=2, Mandatory=$false)][System.ServiceModel.Channels.Binding] $Binding = $null
+	[Parameter(Position=2, Mandatory=$false)][System.ServiceModel.Channels.Binding] $Binding = $null,
+	[Parameter(Position=3, Mandatory=$false)][Nullable[int]] $Timeout = $null
 ) {
 	if ($Binding -ne $null -and [string]::IsNullOrEmpty($EndpointAddress)) {
 		throw New-Object ArgumentNullException '$EndPointAddress', 'You cannot set $Binding without setting $EndpointAddress.'
@@ -183,6 +184,9 @@ function global:Get-WcfProxy(
 		$endpoints = $WsdlImporter.ImportAllEndpoints();
 		$Binding = $endpoints[0].Binding;
 		$EndpointAddress = $endpoints[0].Address;
+	}
+	if ($Timeout -ne $null) {
+		$Binding.SendTimeout = (New-TimeSpan -Seconds $Timeout);
 	}
 	
 	return New-Object $proxyType($Binding, $EndpointAddress);
