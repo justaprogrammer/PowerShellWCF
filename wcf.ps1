@@ -2,11 +2,12 @@
 .SYNOPSIS  
 	Functions to call WCF Services With PowerShell.
 .NOTES
-	Version 1.2 11.02.2012
+	Version 1.3 11.07.2014
 	Requires Powershell v2 and .NET 3.5
 	
 	Copyright (c) 2008 Christian Glessner
 	Copyright (c) 2012 Justin Dearing
+    Copyright (c) 2014 Christoph Petersen
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to
@@ -58,23 +59,25 @@ Add-Type -AssemblyName "System.Runtime.Serialization"
 	Get-WsdlImporter 'http://localhost.fiddler:14232/EchoService.svc?wsdl' -HttpGet 
 
 #>
-function global:Get-WsdlImporter([CmdletBinding()][Parameter(Mandatory=$true, ValueFromPipeline=$true)][string]$WsdlUrl, [switch]$HttpGet)
+function global:Get-WsdlImporter([CmdletBinding()][Parameter(Mandatory=$true, ValueFromPipeline=$true)][string]$WsdlUrl, [switch]$HttpGet, [int] $MaxMessageSize = 524288)
 {
-	if($HttpGet)
+	$mexAddress = New-Object System.Uri($Uri);
+    $mexMode = [System.ServiceModel.Description.MetadataExchangeClientMode]::MetadataExchange
+        
+    if($HttpGet)
 	{
-		$local:mode = [System.ServiceModel.Description.MetadataExchangeClientMode]::HttpGet
+		$mexMode = [System.ServiceModel.Description.MetadataExchangeClientMode]::HttpGet
 	}
-	else
-	{
-		$local:mode = [System.ServiceModel.Description.MetadataExchangeClientMode]::MetadataExchange
-	}
+
+    $binding = New-Object System.ServiceModel.WSHttpBinding -ArgumentList ([System.ServiceModel.SecurityMode]::None);
+    $binding.MaxReceivedMessageSize = $MaxMessageSize;
 	
-	$mexClient = New-Object System.ServiceModel.Description.MetadataExchangeClient([Uri]$WsdlUrl, $mode);
-	$mexClient.MaximumResolvedReferences = [System.Int32]::MaxValue
-	$metadataSet = $mexClient.GetMetadata()
-	$wsdlImporter = New-Object System.ServiceModel.Description.WsdlImporter($metadataSet)
-	
-	return $wsdlImporter	
+    $mexClient = New-Object System.ServiceModel.Description.MetadataExchangeClient($binding);
+    $mexClient.ResolveMetadataReferences = $true;
+    $mexClient.MaximumResolvedReferences = [int]::MaxValue;
+
+    $metaSet = $mexClient.GetMetadata($mexAddress, $mexMode);
+	return New-Object System.ServiceModel.Description.WsdlImporter($metaSet);
 }
 
 <#  
